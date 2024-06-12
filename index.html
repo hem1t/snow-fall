@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Document</title>
+    </head>
+    <body style="background-color:black;">
+    </body>
+    <script>
+     async function loop(fn, time, break_time, bfn = () => {}) {
+         let start_time = new Date();
+         while (true) {
+             fn();
+             if ((new Date()) - start_time > break_time) {
+                 bfn();
+                 break;
+             }
+             await new Promise(r => setTimeout(r, time));
+         }
+     }
+
+     function getRandRng(min, max) {
+         return Math.random() * (max - min) + min;
+     }
+
+     // Load canvas
+     let canvas = document.createElement("div");
+     canvas.style.position = "absolute";
+     canvas.style.height = "100vh";
+     canvas.style.width = "100vw";
+     document.body.appendChild(canvas);
+
+     let [WIDTH, HEIGHT] = [canvas.clientWidth, canvas.clientHeight];
+     console.log(`Created canvas of ${WIDTH}, ${HEIGHT}`);
+
+     let N = 250;
+     let flakes = [];
+     let set_snow_size = (snow) => {
+         let size = getRandRng(3, 8) + 'px';
+         snow.style.height = size;
+         snow.style.width = size;
+     };
+     let set_snow_opacity = (snow) => {
+         snow.style.opacity = getRandRng(0.3, .75);
+     };
+     let set_snow_position = (snow) => {
+         snow.style.left = getRandRng(5, canvas.clientWidth) + 'px';
+         snow.style.top = getRandRng(5, canvas.clientHeight) + 'px';
+     }
+     for (let i = 0; i < N; i++) {
+         let snow = document.createElement("div");
+         snow.style = 'background-color: white; border-radius:99999px; position: absolute;';
+         set_snow_size(snow);
+         set_snow_opacity(snow);
+         set_snow_position(snow);
+         flakes.push(snow);
+         canvas.appendChild(snow);
+     }
+
+     function make_storm(storm_speed) {
+         for (let i = 0; i < N; i++) {
+             let snow = flakes[i];
+             let snow_l = parseInt(snow.style.left);
+             let snow_t = parseInt(snow.style.top);
+             snow.style.left = snow_l + storm_speed + 'px';
+             snow.style.top = snow_t + Math.abs(storm_speed) + 'px';
+             // Reset position
+             if (snow_l > WIDTH) {
+                 snow.style.left = '0px';
+             }
+             if (snow_l < 0) {
+                 snow.style.left = WIDTH + 'px';
+             }
+             if (snow_t > HEIGHT) {
+                 snow.style.top = '0px';
+             }
+         }
+     }
+
+     loop(() => {
+         let direction = getRandRng(-1, 1) <= 0? -1: 1;
+         let start_time = new Date();
+         let total_time = 10 * 1000;
+         loop(() => {
+             let elapsed = new Date() - start_time;
+             let tf = Math.abs(total_time/2 - elapsed);
+             let speed = (total_time/2 - tf) * 0.00058 * direction + direction;
+             make_storm(speed);
+         }, 10, total_time,
+         () => {
+             // BAD IDEA
+             // Reseting position after storm
+             /* for (let i = 0; i < N; i++) {
+              *     set_snow_position(flakes[i]);
+              * } */
+         });
+    },
+    10 * 1000, Infinity);
+    </script>
+</html>
